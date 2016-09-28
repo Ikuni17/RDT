@@ -50,7 +50,3 @@ if __name__ == '__main__':
         rdt.rdt_1_0_send(rep_msg_S)
         
     rdt.disconnect()
-
-    
-    
-    
