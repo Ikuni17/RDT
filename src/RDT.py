@@ -130,7 +130,7 @@ class RDT:
             self.byte_buffer = self.byte_buffer[length:]
             # if this was the last packet, will return on the next iteration
 
-# Test
+# Test1
     def rdt_2_1_send(self, msg_S):
         p = AckPack(self.seq_num, msg_S)
         self.seq_num += 1
