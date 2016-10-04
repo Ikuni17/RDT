@@ -3,6 +3,14 @@ import argparse
 from time import sleep
 import hashlib
 
+global pos_ack          #The format for a packet's introductory byte that denotes it as a positive acknowledgement.
+pos_ack = 0b00000000
+
+global neg_ack          #The format for a packet's introductory byte that denotes it as a negative acknowledgement.
+neg_ack = 0b01000000
+
+global data             #The format for a packet's introductory byte that denotes it as a data packet.
+data = 0b10000000
 
 class Packet:
     ## the number of bytes used to store packet length
@@ -51,10 +59,9 @@ class Packet:
         return checksum_S != computed_checksum_S
 
 class AckPack(Packet):
-    def __init__(self, seq_num, msg_S, format, ack_nack):
+    def __init__(self, seq_num, msg_S, format):
         Packet.__init__(self, seq_num, msg_S)
         self.format = format
-        self.ack_nack = ack_nack
 
     @classmethod
     def from_byte_S(self, byte_S):
@@ -116,7 +123,7 @@ class RDT:
             
     
     def rdt_2_1_send(self, msg_S):
-        p = Packet(self, msg_S)
+        p = Packet(self.seq_num, msg_S)
         self.seq_num += 1
         success = False
         while success is False:
