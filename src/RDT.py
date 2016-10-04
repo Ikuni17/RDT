@@ -4,10 +4,10 @@ from time import sleep
 import hashlib
 
 global pos_ack          #The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = 0b00000000
+pos_ack = 0b01000000
 
 global neg_ack          #The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = 0b01000000
+neg_ack = 0b00000000
 
 global data             #The format for a packet's introductory byte that denotes it as a data packet.
 data = 0b10000000
@@ -59,9 +59,10 @@ class Packet:
         return checksum_S != computed_checksum_S
 
 class AckPack(Packet):
-    def __init__(self, seq_num, msg_S, format):
+    flag_length = 1
+    def __init__(self, seq_num, msg_S, flag):
         Packet.__init__(self, seq_num, msg_S)
-        self.format = format
+        self.flag = flag
 
     @classmethod
     def from_byte_S(self, byte_S):
@@ -70,19 +71,21 @@ class AckPack(Packet):
         #extract the fields
         seq_num = int(byte_S[Packet.length_S_length : Packet.length_S_length+Packet.seq_num_S_length])
         msg_S = byte_S[Packet.length_S_length+Packet.seq_num_S_length+Packet.checksum_length :]
+        flag = bytes[Packet.length_S_length+Packet.seq_num_S_length:Packet.length_S_length+Packet.seq_num_S_length+AckPack.flag_length]
         return self(seq_num, msg_S)
-        
         
     def get_byte_S(self):
         #convert sequence number of a byte field of seq_num_S_length bytes
         seq_num_S = str(self.seq_num).zfill(self.seq_num_S_length)
+        #get the string form of the flag
+        flag_S = str(self.flag).zfill(len(self.flag_length))
         #convert length to a byte field of length_S_length bytes
-        length_S = str(self.length_S_length + len(seq_num_S) + self.checksum_length + len(self.msg_S)).zfill(self.length_S_length)
+        length_S = str(self.length_S_length + len(seq_num_S) + len(flag_S) + self.checksum_length + len(self.msg_S)).zfill(self.length_S_length)
         #compute the checksum
-        checksum = hashlib.md5((length_S+seq_num_S+self.msg_S).encode('utf-8'))
+        checksum = hashlib.md5((length_S+seq_num_S+flag_S+self.msg_S).encode('utf-8'))
         checksum_S = checksum.hexdigest()
         #compile into a string
-        return length_S + seq_num_S + checksum_S + self.msg_S  
+        return length_S + seq_num_S + flag_S + checksum_S + self.msg_S  
 
 class RDT:
     ## latest sequence number used in a packet
@@ -128,9 +131,9 @@ class RDT:
         success = False
         while success is False:
             self.network.udt_send(p.get_byte_S())
-            success = check_ack()
+            success = check_flag()
 
-    def check_ack(self):
+    def check_flag(self):
         #TODO: Check that the returned packet is an ACK or a NACK, then return True or False respectively.
         ret_S = None
         byte_S = self.network.udt_receive()
