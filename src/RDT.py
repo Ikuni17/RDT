@@ -131,7 +131,7 @@ class RDT:
             # if this was the last packet, will return on the next iteration
 
     def rdt_2_1_send(self, msg_S):
-        p = Packet(self.seq_num, msg_S)
+        p = AckPack(self.seq_num, msg_S)
         self.seq_num += 1
         success = False
         while success is False:
