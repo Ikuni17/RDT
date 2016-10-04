@@ -22,6 +22,13 @@ if __name__ == '__main__':
     for msg_S in msg_L:
         print('Converting: '+msg_S)
         rdt.rdt_1_0_send(msg_S)
+        21ack = False
+        
+        while 21ack is False:
+            rdt.rdt_2_1_send(msg_S)
+            response = rdt.rdt_2_1_receive()
+            21ack = rdt.check_flag(response)
+        
        
         # try to receive message before timeout 
         msg_S = None
