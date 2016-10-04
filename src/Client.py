@@ -19,30 +19,51 @@ if __name__ == '__main__':
     time_of_last_data = time.time()
      
     rdt = RDT.RDT('client', args.server, args.port)
-    for msg_S in msg_L:
-        print('Converting: '+msg_S)
-        rdt.rdt_1_0_send(msg_S)
-        21ack = False
-        
-        while 21ack is False:
-            rdt.rdt_2_1_send(msg_S)
-            response = rdt.rdt_2_1_receive()
-            21ack = rdt.check_flag(response)
-        
-       
-        # try to receive message before timeout 
-        msg_S = None
-        while msg_S == None:
-            msg_S = rdt.rdt_1_0_receive()
-            if msg_S is None:
-                if time_of_last_data + timeout < time.time():
-                    break
-                else:
-                    continue
-        time_of_last_data = time.time()
-        
-        #print the result
-        if msg_S:
-            print('to: '+msg_S+'\n')
+    use_this = 2
+
+    if use_this is 1:
+        for msg_S in msg_L:
+            print('Converting: '+msg_S)
+            rdt.rdt_1_0_send(msg_S)
+            # try to receive message before timeout 
+            msg_S = None
+            while msg_S == None:
+                msg_S = rdt.rdt_1_0_receive()
+                if msg_S is None:
+                    if time_of_last_data + timeout < time.time():
+                        break
+                    else:
+                        continue
+            time_of_last_data = time.time()
+            
+            #print the result
+            if msg_S:
+                print('to: '+msg_S+'\n')
+    
+    elif use_this is 2:
+        for msg_S in msg_L:
+            print('Converting: '+msg_S)
+            comm = False
+            data_get = False
+            
+            while comm is False:
+                rdt.rdt_2_1_send(msg_S)
+                response = rdt.rdt_2_1_receive()
+                ack = rdt.check_format(response)
+                if ack is False:
+                    comm = rdt.check_ack(response)
+            
+            while data_get is False:
+                msg_S = rdt.rdt_2_1_receive()
+                if pig_data != None:
+                    data_get = True
+            
+            print("to: "+msg_S+"\n")
+
+            
+
+
+
+
         
     rdt.disconnect()
