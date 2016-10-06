@@ -2,37 +2,28 @@ import argparse
 import RDT
 import time
 
-global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = 0b01000000
-
-global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = 0b00000000
-
-global data  # The format for a packet's introductory byte that denotes it as a data packet.
-data = 0b10000000
-
 if __name__ == '__main__':
-    parser =  argparse.ArgumentParser(description='Quotation client talking to a Pig Latin server.')
+    parser = argparse.ArgumentParser(description='Quotation client talking to a Pig Latin server.')
     parser.add_argument('server', help='Server.')
     parser.add_argument('port', help='Port.', type=int)
     args = parser.parse_args()
-    
-    msg_L = ['The use of COBOL cripples the mind; its teaching should, therefore, be regarded as a criminal offense. -- Edsgar Dijkstra',
-            'C makes it easy to shoot yourself in the foot; C++ makes it harder, but when you do, it blows away your whole leg. -- Bjarne Stroustrup',
-            'A mathematician is a device for turning coffee into theorems. -- Paul Erdos',
-            'Grove giveth and Gates taketh away. -- Bob Metcalfe (inventor of Ethernet) on the trend of hardware speedups not being able to keep up with software demands',
-            'Wise men make proverbs, but fools repeat them. -- Samuel Palmer (1805-80)']
-    
-     
-    timeout = 2 #send the next message if not response
+
+    msg_L = [
+        'The use of COBOL cripples the mind; its teaching should, therefore, be regarded as a criminal offense. -- Edsgar Dijkstra',
+        'C makes it easy to shoot yourself in the foot; C++ makes it harder, but when you do, it blows away your whole leg. -- Bjarne Stroustrup',
+        'A mathematician is a device for turning coffee into theorems. -- Paul Erdos',
+        'Grove giveth and Gates taketh away. -- Bob Metcalfe (inventor of Ethernet) on the trend of hardware speedups not being able to keep up with software demands',
+        'Wise men make proverbs, but fools repeat them. -- Samuel Palmer (1805-80)']
+
+    timeout = 2  # send the next message if not response
     time_of_last_data = time.time()
-     
+
     rdt = RDT.RDT('client', args.server, args.port)
-    use_this = 2
+    use_this = 1
 
     if use_this is 1:
         for msg_S in msg_L:
-            print('Converting: '+msg_S)
+            print('Converting: ' + msg_S)
             rdt.rdt_1_0_send(msg_S)
             # try to receive message before timeout 
             msg_S = None
@@ -44,46 +35,29 @@ if __name__ == '__main__':
                     else:
                         continue
             time_of_last_data = time.time()
-            
-            #print the result
+
+            # print the result
             if msg_S:
-                print('to: '+msg_S+'\n')
-    
+                print('to: ' + msg_S + '\n')
+
     elif use_this is 2:
         for msg_S in msg_L:
-            print('Converting: '+msg_S)
+            print('Converting: ' + msg_S)
             comm = False
             data_get = False
-            
-            rdt.rdt_2_1_send(msg_S)
-            
+
             while comm is False:
+                rdt.rdt_2_1_send(msg_S)
                 response = rdt.rdt_2_1_receive()
                 ack = rdt.check_format(response)
-                comm = rdt.check_ack(response)
-                if comm is False:
-                    rdt.rdt_2_1_send(msg_S)
+                if ack is False:
+                    comm = rdt.check_ack(response)
 
             while data_get is False:
                 msg_S = rdt.rdt_2_1_receive()
                 if pig_data != None:
                     data_get = True
 
-            
-            print("to: "+msg_S+"\n")
+            print("to: " + msg_S + "\n")
 
-    elif use_this is 3:
-         for msg_S in msg_L:
-            print('Converting: '+msg_S)
-            comm = False
-            data_get = False
-
-            #TODO Implement RDT3.0 protocol
-
-            
-
-
-
-
-        
     rdt.disconnect()
