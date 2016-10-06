@@ -76,7 +76,7 @@ class AckPack(Packet):
         seq_num = int(byte_S[Packet.length_S_length: Packet.length_S_length + Packet.seq_num_S_length])
         msg_S = byte_S[Packet.length_S_length + Packet.seq_num_S_length + Packet.checksum_length:]
         flag = bytes[Packet.length_S_length + Packet.seq_num_S_length: Packet.length_S_length + Packet.seq_num_S_length + AckPack.flag_length]
-        return self(seq_num, msg_S)
+        return self(seq_num, msg_S, flag)
 
     def get_byte_S(self):
         # convert sequence number of a byte field of seq_num_S_length bytes

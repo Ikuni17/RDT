@@ -2,6 +2,15 @@ import argparse
 import RDT
 import time
 
+global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
+pos_ack = 0b01000000
+
+global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
+neg_ack = 0b00000000
+
+global data  # The format for a packet's introductory byte that denotes it as a data packet.
+data = 0b10000000
+
 if __name__ == '__main__':
     parser =  argparse.ArgumentParser(description='Quotation client talking to a Pig Latin server.')
     parser.add_argument('server', help='Server.')
@@ -46,19 +55,30 @@ if __name__ == '__main__':
             comm = False
             data_get = False
             
+            rdt.rdt_2_1_send(msg_S)
+            
             while comm is False:
-                rdt.rdt_2_1_send(msg_S)
                 response = rdt.rdt_2_1_receive()
                 ack = rdt.check_format(response)
-                if ack is False:
-                    comm = rdt.check_ack(response)
-            
+                comm = rdt.check_ack(response)
+                if comm is False:
+                    rdt.rdt_2_1_send(msg_S)
+
             while data_get is False:
                 msg_S = rdt.rdt_2_1_receive()
                 if pig_data != None:
                     data_get = True
+
             
             print("to: "+msg_S+"\n")
+
+    elif use_this is 3:
+         for msg_S in msg_L:
+            print('Converting: '+msg_S)
+            comm = False
+            data_get = False
+
+            #TODO Implement RDT3.0 protocol
 
             
 
