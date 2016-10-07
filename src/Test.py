@@ -2,8 +2,8 @@ pos_ack = bytes([00000000])
 #pos = bin(0)
 #data = bin(128)
 #neg = bin(64)
-pos = (0).to_bytes(2, byteorder='big')
-neg = (1).to_bytes(2, byteorder='big')
+pos = (1).to_bytes(2, byteorder='big')
+neg = (0).to_bytes(2, byteorder='big')
 data = (128).to_bytes(2, byteorder='big')
 
 
