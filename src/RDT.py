@@ -84,7 +84,7 @@ class AckPack(Packet):
                AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length]
         # print("from flag")
         # print(flag)
-        return self(seq_num, flag, msg_S)
+        return self(seq_num, msg_S, flag)
 
     def get_byte_S(self):
         # convert sequence number of a byte field of seq_num_S_length bytes
@@ -181,12 +181,42 @@ class RDT:
         elif flag is "neg":
             p = AckPack(self.seq_num, msg_S, neg_ack)
         self.seq_num += 1
-        success = False
-        while success is False:
-            self.network.udt_send(p.get_byte_S())
+        self.network.udt_send(p.get_byte_S())
 
     def rdt_2_1_receive(self):
-        pass
+        ret_S = None
+        byte_S = self.network.udt_receive()
+        self.byte_buffer += byte_S
+
+        length = int(self.byte_buffer[:AckPack.length_S_length])
+        if not AckPack.corrupt(self.byte_buffer[0:length]):
+            rdt.rdt_2_1_send("", "pos")
+            p = AckPack.from_byte_S(self.byte_buffer[0:length])
+            ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+            self.byte_buffer = self.byte_buffer[length:]
+            return ret_S
+        else:
+            rdt.rdt_2_1_send("", "neg")
+        '''# keep extracting packets - if reordered, could get more than one
+        while True:
+            # check if we have received enough bytes
+            if (len(self.byte_buffer) < AckPack.length_S_length):
+                return ret_S  # not enough bytes to read packet length
+            # extract length of packet
+            length = int(self.byte_buffer[:AckPack.length_S_length])
+            if len(self.byte_buffer) < length:
+                return ret_S  # not enough bytes to read the whole packet
+            # returns false if the packet is not corrupt
+            if not AckPack.corrupt(self.byte_buffer[0:length]):
+                # create packet from buffer content and add to return string
+                rdt.rdt_2_1_send("", "pos")
+                p = AckPack.from_byte_S(self.byte_buffer[0:length])
+                ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                # remove the packet bytes from the buffer
+                self.byte_buffer = self.byte_buffer[length:]
+                # if this was the last packet, will return on the next iteration
+            else:
+                rdt.rdt_2_1_send("", "neg")'''
 
     def rdt_3_0_send(self, msg_S):
         pass
