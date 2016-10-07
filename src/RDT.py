@@ -4,13 +4,13 @@ from time import sleep
 import hashlib
 
 global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = 0b01000000
+pos_ack = (0).to_bytes(2, byteorder='big')
 
 global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = 0b00000000
+neg_ack = (64).to_bytes(2, byteorder='big')
 
 global data  # The format for a packet's introductory byte that denotes it as a data packet.
-data = 0b10000000
+data = (128).to_bytes(2, byteorder='big')
 
 
 class Packet:

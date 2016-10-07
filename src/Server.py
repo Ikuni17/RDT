@@ -35,7 +35,7 @@ if __name__ == '__main__':
     
     rdt = RDT.RDT('server', None, args.port)
 
-    use_this = 2
+    use_this = 1
 
     if use_this is 1:
         while(True):
@@ -85,7 +85,4 @@ if __name__ == '__main__':
             print('Converted %s \nto %s\n' % (msg_S, rep_msg_S))
             rdt.rdt_3_0_send(rep_msg_S)
 
-    rdt.disconnect()
-        
-        
     rdt.disconnect()
