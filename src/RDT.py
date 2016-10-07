@@ -97,6 +97,7 @@ class AckPack(Packet):
         # compile into a string
         return length_S + seq_num_S + flag_S + checksum_S + self.msg_S
 
+#
     def corrupt(byte_S):
         # extract the fields
         length_S = byte_S[0:AckPack.length_S_length]
