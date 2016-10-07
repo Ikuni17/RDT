@@ -170,11 +170,16 @@ class RDT:
             # if this was the last packet, will return on the next iteration
             # print("flag: " + p.flag)
 
-    def rdt_2_1_send(self, msg_S):
+    def rdt_2_1_send(self, msg_S, flag):
         global data
         global pos_ack
         global neg_ack
-        p = AckPack(self.seq_num, msg_S, data)
+        if flag is "data":
+            p = AckPack(self.seq_num, msg_S, data)
+        elif flag is "pos":
+            p = AckPack(self.seq_num, msg_S, pos_ack)
+        elif flag is "neg":
+            p = AckPack(self.seq_num, msg_S, neg_ack)
         self.seq_num += 1
         success = False
         while success is False:

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     time_of_last_data = time.time()
 
     rdt = RDT.RDT('client', args.server, args.port)
-    use_this = 1
+    use_this = 2
 
     if use_this is 1:
         for msg_S in msg_L:
@@ -40,6 +40,7 @@ if __name__ == '__main__':
             if msg_S:
                 print('to: ' + msg_S + '\n')
 
+
     elif use_this is 2:
         for msg_S in msg_L:
             print('Converting: ' + msg_S)
@@ -47,10 +48,13 @@ if __name__ == '__main__':
             data_get = False
 
             while comm is False:
-                rdt.rdt_2_1_send(msg_S)
+                rdt.rdt_2_1_send(msg_S, "data")
                 response = rdt.rdt_2_1_receive()
+                # We need to check if the response is corrupt before anything, probably with an if branch
+                # So if corrupt just go back and resend, else continue with the stuff below
                 ack = rdt.check_format(response)
                 if ack is False:
+                    # Comm is set to true if the packet is a positive acknowledgement, otherwise the packet was corrupt
                     comm = rdt.check_ack(response)
 
             while data_get is False:
@@ -67,5 +71,6 @@ if __name__ == '__main__':
             data_get = False
 
             #TODO Implement RDT3.0 protocol
+
 
     rdt.disconnect()

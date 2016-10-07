@@ -30,3 +30,10 @@ print(get_bit(int.from_bytes(data, byteorder='big'), 7))
 print(get_bit(int.from_bytes(neg, byteorder='big'), 0))
 print(get_bit(int.from_bytes(pos, byteorder='big'), 0))
 
+def test(flag):
+    if flag is "data":
+        print("data")
+    else:
+        print("wrong")
+
+test("cheese")
