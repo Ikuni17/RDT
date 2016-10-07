@@ -62,7 +62,7 @@ class Packet:
 
 
 class AckPack(Packet):
-    flag_length = 0
+    flag_length = 7
 
     def __init__(self, seq_num, msg_S, flag):
         Packet.__init__(self, seq_num, msg_S)
@@ -78,12 +78,12 @@ class AckPack(Packet):
             raise RuntimeError('Cannot initialize Packet: byte_S is corrupt')
         # extract the fields
         seq_num = int(byte_S[AckPack.length_S_length: AckPack.length_S_length + AckPack.seq_num_S_length])
-        msg_S = byte_S[AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.checksum_length:]
-        flag = bytes[
+        msg_S = byte_S[AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
+        flag = byte_S[
                AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length]
         print("from flag")
         print(flag)
-        return self(seq_num, msg_S)
+        return self(seq_num, flag, msg_S)
 
     def get_byte_S(self):
         # convert sequence number of a byte field of seq_num_S_length bytes
@@ -104,7 +104,7 @@ class AckPack(Packet):
         # compile into a string
         return length_S + seq_num_S + flag_S + checksum_S + self.msg_S
 
-#
+    #
     def corrupt(byte_S):
         # extract the fields
         length_S = byte_S[0:AckPack.length_S_length]
@@ -116,7 +116,7 @@ class AckPack(Packet):
                  AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.flag_length + AckPack.seq_num_S_length + AckPack.length_S_length]
         print(flag_S)
         checksum_S = byte_S[
-                     AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length: AckPack.seq_num_S_length + AckPack.length_S_length +  AckPack.flag_length + AckPack.checksum_length]
+                     AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length: AckPack.seq_num_S_length + AckPack.length_S_length + AckPack.flag_length + AckPack.checksum_length]
         print("checksum: " + checksum_S)
         msg_S = byte_S[
                 AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
