@@ -26,5 +26,7 @@ print(len(data))
 print(data)
 #print(pos_ack)
 #print(data)
-
+print(get_bit(int.from_bytes(data, byteorder='big'), 7))
+print(get_bit(int.from_bytes(neg, byteorder='big'), 0))
+print(get_bit(int.from_bytes(pos, byteorder='big'), 0))
 

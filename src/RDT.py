@@ -4,10 +4,10 @@ from time import sleep
 import hashlib
 
 global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = b'01000000'
+pos_ack = (0).to_bytes(2, byteorder='big')
 
 global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = b'00000000'
+neg_ack = (1).to_bytes(2, byteorder='big')
 
 global data  # The format for a packet's introductory byte that denotes it as a data packet.
 data = (128).to_bytes(1, byteorder='big')
@@ -186,11 +186,11 @@ class RDT:
 
     def check_format(self, flag):
         # Return true if 7th index is 1, which is flag for data packet. Otherwise false which is ACK packet
-        return (flag & (1 << 7)) != 0
+        return (int.from_bytes(flag, byteorder='big') & (1 << 7)) != 0
 
     def check_ack(self, flag):
-        # Return true if 6th index is 1, which is flag for positive ACK. Otherwise false which is NACK
-        return (flag & (1 << 6)) != 0
+        # Return true if 0th index is 1, which is flag for negative ACK. Otherwise false which is positive ACK
+        return (int.from_bytes(flag, byteorder='big') & (1 << 0)) != 0
 
     def rdt_2_1_receive(self):
         pass
