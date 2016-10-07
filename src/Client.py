@@ -60,4 +60,12 @@ if __name__ == '__main__':
 
             print("to: " + msg_S + "\n")
 
+    elif use_this is 3:
+         for msg_S in msg_L:
+            print('Converting: '+msg_S)
+            comm = False
+            data_get = False
+
+            #TODO Implement RDT3.0 protocol
+
     rdt.disconnect()
