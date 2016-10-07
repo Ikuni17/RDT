@@ -4,13 +4,13 @@ from time import sleep
 import hashlib
 
 global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = 0b01000000
+pos_ack = b'01000000'
 
 global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = 0b00000000
+neg_ack = b'00000000'
 
 global data  # The format for a packet's introductory byte that denotes it as a data packet.
-data = 0b10000000
+data = (128).to_bytes(1, byteorder='big')
 
 
 class Packet:
@@ -68,8 +68,9 @@ class AckPack(Packet):
         Packet.__init__(self, seq_num, msg_S)
         self.flag = flag
         self.flag_length = len(str(flag))
-        print("flag1: " + str(self.flag))
-        print("flag length: " + str(self.flag_length))
+        print(flag)
+        print("construct flag: " + str(self.flag))
+        print("construct flag length: " + str(self.flag_length))
 
     @classmethod
     def from_byte_S(self, byte_S):
@@ -80,20 +81,26 @@ class AckPack(Packet):
         msg_S = byte_S[AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.checksum_length:]
         flag = bytes[
                AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length]
+        print("from flag")
+        print(flag)
         return self(seq_num, msg_S)
 
     def get_byte_S(self):
         # convert sequence number of a byte field of seq_num_S_length bytes
         seq_num_S = str(self.seq_num).zfill(self.seq_num_S_length)
+        print("getSeqnum: " + seq_num_S)
         flag_S = str(self.flag).zfill(self.flag_length)
-        print("Flag: " + flag_S)
+        print("getFlag: " + flag_S)
         # convert length to a byte field of length_S_length bytes
         length_S = str(
             self.length_S_length + len(seq_num_S) + len(flag_S) + self.checksum_length + len(self.msg_S)).zfill(
             self.length_S_length)
+        print("getLength_S: " + length_S)
         # compute the checksum
         checksum = hashlib.md5((length_S + seq_num_S + flag_S + self.msg_S).encode('utf-8'))
+        print(checksum)
         checksum_S = checksum.hexdigest()
+        print("getchecksum: " + checksum_S)
         # compile into a string
         return length_S + seq_num_S + flag_S + checksum_S + self.msg_S
 
@@ -104,15 +111,16 @@ class AckPack(Packet):
         print("length_S: " + length_S)
         seq_num_S = byte_S[AckPack.length_S_length: AckPack.length_S_length + AckPack.seq_num_S_length]
         print("seq_num: " + seq_num_S)
+        print(AckPack.flag_length)
         flag_S = byte_S[
-                 AckPack.length_S_length + AckPack.seq_num_S_length:AckPack.flag_length + AckPack.seq_num_S_length + AckPack.length_S_length]
-        print("flag: " + flag_S)
+                 AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.flag_length + AckPack.seq_num_S_length + AckPack.length_S_length]
+        print(flag_S)
         checksum_S = byte_S[
                      AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length: AckPack.seq_num_S_length + AckPack.length_S_length +  AckPack.flag_length + AckPack.checksum_length]
         print("checksum: " + checksum_S)
         msg_S = byte_S[
                 AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
-        print("msg_S" + msg_S)
+        print("msg_S: " + msg_S)
 
         # compute the checksum locally
         checksum = hashlib.md5(str(length_S + seq_num_S + flag_S + msg_S).encode('utf-8'))
