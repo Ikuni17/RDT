@@ -67,7 +67,7 @@ if __name__ == '__main__':
             #convert and reply
             rep_msg_S = piglatinize(msg_S)
             print('Converted %s \nto %s\n' % (msg_S, rep_msg_S))
-            rdt.rdt_2_1_send(rep_msg_S)
+            rdt.rdt_2_1_send(rep_msg_S, "data")
 
     elif use_this is 3:
         while(True):
@@ -85,4 +85,10 @@ if __name__ == '__main__':
             print('Converted %s \nto %s\n' % (msg_S, rep_msg_S))
             rdt.rdt_3_0_send(rep_msg_S)
 
+<<<<<<< HEAD
+=======
+    rdt.disconnect()
+
+
+>>>>>>> d2da9dd851b52bc35abfdddfe8be9a6adf63fb31
     rdt.disconnect()

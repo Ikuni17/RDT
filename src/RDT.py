@@ -4,13 +4,13 @@ from time import sleep
 import hashlib
 
 global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = (0).to_bytes(2, byteorder='big')
+pos_ack = (1).to_bytes(2, byteorder='big')
 
 global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = (64).to_bytes(2, byteorder='big')
+neg_ack = (0).to_bytes(2, byteorder='big')
 
 global data  # The format for a packet's introductory byte that denotes it as a data packet.
-data = (128).to_bytes(2, byteorder='big')
+data = (128).to_bytes(1, byteorder='big')
 
 
 class Packet:
@@ -62,14 +62,15 @@ class Packet:
 
 
 class AckPack(Packet):
-    flag_length = 0
+    flag_length = 7
 
     def __init__(self, seq_num, msg_S, flag):
         Packet.__init__(self, seq_num, msg_S)
         self.flag = flag
-        self.flag_length = len(str(flag))
-        print("flag1: " + str(self.flag))
-        print("flag length: " + str(self.flag_length))
+        # self.flag_length = len(str(flag))
+        # print(flag)
+        # print("construct flag: " + str(self.flag))
+        # print("construct flag length: " + str(self.flag_length))
 
     @classmethod
     def from_byte_S(self, byte_S):
@@ -77,48 +78,56 @@ class AckPack(Packet):
             raise RuntimeError('Cannot initialize Packet: byte_S is corrupt')
         # extract the fields
         seq_num = int(byte_S[AckPack.length_S_length: AckPack.length_S_length + AckPack.seq_num_S_length])
-        msg_S = byte_S[AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.checksum_length:]
-        flag = bytes[
+        msg_S = byte_S[
+                AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
+        flag = byte_S[
                AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length]
-        return self(seq_num, msg_S)
+        # print("from flag")
+        # print(flag)
+        return self(seq_num, msg_S, flag)
 
     def get_byte_S(self):
         # convert sequence number of a byte field of seq_num_S_length bytes
         seq_num_S = str(self.seq_num).zfill(self.seq_num_S_length)
+        # print("getSeqnum: " + seq_num_S)
         flag_S = str(self.flag).zfill(self.flag_length)
-        print("Flag: " + flag_S)
+        # print("getFlag: " + flag_S)
         # convert length to a byte field of length_S_length bytes
         length_S = str(
             self.length_S_length + len(seq_num_S) + len(flag_S) + self.checksum_length + len(self.msg_S)).zfill(
             self.length_S_length)
+        # print("getLength_S: " + length_S)
         # compute the checksum
         checksum = hashlib.md5((length_S + seq_num_S + flag_S + self.msg_S).encode('utf-8'))
+        # print(checksum)
         checksum_S = checksum.hexdigest()
+        # print("getchecksum: " + checksum_S)
         # compile into a string
         return length_S + seq_num_S + flag_S + checksum_S + self.msg_S
 
-#
+    #
     def corrupt(byte_S):
         # extract the fields
         length_S = byte_S[0:AckPack.length_S_length]
-        print("length_S: " + length_S)
+        # print("length_S: " + length_S)
         seq_num_S = byte_S[AckPack.length_S_length: AckPack.length_S_length + AckPack.seq_num_S_length]
-        print("seq_num: " + seq_num_S)
+        # print("seq_num: " + seq_num_S)
+        # print(AckPack.flag_length)
         flag_S = byte_S[
-                 AckPack.length_S_length + AckPack.seq_num_S_length:AckPack.flag_length + AckPack.seq_num_S_length + AckPack.length_S_length]
-        print("flag: " + flag_S)
+                 AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.flag_length + AckPack.seq_num_S_length + AckPack.length_S_length]
+        # print(flag_S)
         checksum_S = byte_S[
-                     AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length: AckPack.seq_num_S_length + AckPack.length_S_length +  AckPack.flag_length + AckPack.checksum_length]
-        print("checksum: " + checksum_S)
+                     AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length: AckPack.seq_num_S_length + AckPack.length_S_length + AckPack.flag_length + AckPack.checksum_length]
+        # print("checksum: " + checksum_S)
         msg_S = byte_S[
                 AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
-        print("msg_S" + msg_S)
+        # print("msg_S: " + msg_S)
 
         # compute the checksum locally
         checksum = hashlib.md5(str(length_S + seq_num_S + flag_S + msg_S).encode('utf-8'))
-        print("checksum: " + str(checksum))
+        # print("checksum: " + str(checksum))
         computed_checksum_S = checksum.hexdigest()
-        print("computed checksum: " + computed_checksum_S)
+        # print("computed checksum: " + computed_checksum_S)
         # and check if the same
         return checksum_S != computed_checksum_S
 
@@ -136,10 +145,7 @@ class RDT:
         self.network.disconnect()
 
     def rdt_1_0_send(self, msg_S):
-        global data
-        global pos_ack
-        global neg_ack
-        p = AckPack(self.seq_num, msg_S, data)
+        p = Packet(self.seq_num, msg_S)
         self.seq_num += 1
         self.network.udt_send(p.get_byte_S())
 
@@ -150,48 +156,81 @@ class RDT:
         # keep extracting packets - if reordered, could get more than one
         while True:
             # check if we have received enough bytes
+            if (len(self.byte_buffer) < Packet.length_S_length):
+                return ret_S  # not enough bytes to read packet length
+            # extract length of packet
+            length = int(self.byte_buffer[:Packet.length_S_length])
+            if len(self.byte_buffer) < length:
+                return ret_S  # not enough bytes to read the whole packet
+            # create packet from buffer content and add to return string
+            p = Packet.from_byte_S(self.byte_buffer[0:length])
+            ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+            # remove the packet bytes from the buffer
+            self.byte_buffer = self.byte_buffer[length:]
+            # if this was the last packet, will return on the next iteration
+            # print("flag: " + p.flag)
+
+    def rdt_2_1_send(self, msg_S, flag):
+        global data
+        global pos_ack
+        global neg_ack
+        if flag is "data":
+            p = AckPack(self.seq_num, msg_S, data)
+        elif flag is "pos":
+            p = AckPack(self.seq_num, msg_S, pos_ack)
+        elif flag is "neg":
+            p = AckPack(self.seq_num, msg_S, neg_ack)
+        self.seq_num += 1
+        self.network.udt_send(p.get_byte_S())
+
+    def rdt_2_1_receive(self):
+        ret_S = None
+        byte_S = self.network.udt_receive()
+        self.byte_buffer += byte_S
+
+        length = int(self.byte_buffer[:AckPack.length_S_length])
+        if not AckPack.corrupt(self.byte_buffer[0:length]):
+            rdt.rdt_2_1_send("", "pos")
+            p = AckPack.from_byte_S(self.byte_buffer[0:length])
+            ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+            self.byte_buffer = self.byte_buffer[length:]
+            return ret_S
+        else:
+            rdt.rdt_2_1_send("", "neg")
+        '''# keep extracting packets - if reordered, could get more than one
+        while True:
+            # check if we have received enough bytes
             if (len(self.byte_buffer) < AckPack.length_S_length):
                 return ret_S  # not enough bytes to read packet length
             # extract length of packet
             length = int(self.byte_buffer[:AckPack.length_S_length])
             if len(self.byte_buffer) < length:
                 return ret_S  # not enough bytes to read the whole packet
-            # create packet from buffer content and add to return string
-            p = AckPack.from_byte_S(self.byte_buffer[0:length])
-            ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
-            # remove the packet bytes from the buffer
-            self.byte_buffer = self.byte_buffer[length:]
-            # if this was the last packet, will return on the next iteration
-            print("flag: " + p.flag)
-
-            # Test12
-
-    def rdt_2_1_send(self, msg_S):
-        global data
-        global pos_ack
-        global neg_ack
-        p = AckPack(self.seq_num, msg_S, data)
-        self.seq_num += 1
-        success = False
-        while success is False:
-            self.network.udt_send(p.get_byte_S())
-
-    def check_format(self, flag):
-        # Return true if 7th index is 1, which is flag for data packet. Otherwise false which is ACK packet
-        return (flag & (1 << 7)) != 0
-
-    def check_ack(self, flag):
-        # Return true if 6th index is 1, which is flag for positive ACK. Otherwise false which is NACK
-        return (flag & (1 << 6)) != 0
-
-    def rdt_2_1_receive(self):
-        pass
+            # returns false if the packet is not corrupt
+            if not AckPack.corrupt(self.byte_buffer[0:length]):
+                # create packet from buffer content and add to return string
+                rdt.rdt_2_1_send("", "pos")
+                p = AckPack.from_byte_S(self.byte_buffer[0:length])
+                ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
+                # remove the packet bytes from the buffer
+                self.byte_buffer = self.byte_buffer[length:]
+                # if this was the last packet, will return on the next iteration
+            else:
+                rdt.rdt_2_1_send("", "neg")'''
 
     def rdt_3_0_send(self, msg_S):
         pass
 
     def rdt_3_0_receive(self):
         pass
+
+    def check_format(self, flag):
+        # Return true if 7th index is 1, which is flag for data packet. Otherwise false which is ACK packet
+        return (int.from_bytes(flag, byteorder='big') & (1 << 7)) != 0
+
+    def check_ack(self, flag):
+        # Return true if 0th index is 1, which is flag for positive ACK. Otherwise false which is negative ACK
+        return (int.from_bytes(flag, byteorder='big') & (1 << 0)) != 0
 
 
 if __name__ == '__main__':
