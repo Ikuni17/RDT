@@ -59,6 +59,7 @@ if __name__ == '__main__':
         while (True):
             success = False
             # Loop until we receive a valid data packet
+            # TODO Infinite Loop
             while success is False:
                 # try to receive message before timeout
                 rcv_pkt = rdt.rdt_2_1_receive()

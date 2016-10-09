@@ -49,6 +49,7 @@ if __name__ == '__main__':
             #data_get = False
 
             # Loop until a positive ack is received for this packet
+            # TODO Infinite Loop
             while success is False:
                 # Make the packet and attempt to send it
                 rdt.rdt_2_1_send(msg_S, "data")

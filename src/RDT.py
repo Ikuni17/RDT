@@ -183,6 +183,7 @@ class RDT:
         self.seq_num += 1
         self.network.udt_send(p.get_byte_S())
 
+    # TODO Could be causing Infinite Loops in Server/Client
     def rdt_2_1_receive(self):
         #ret_S = None
         byte_S = self.network.udt_receive()
