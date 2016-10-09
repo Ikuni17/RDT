@@ -53,20 +53,21 @@ if __name__ == '__main__':
             while success is False:
                 # Make the packet and attempt to send it
                 rdt.rdt_2_1_send(msg_S, "data")
+                time.sleep(2)
                 # Wait to receive a response from the receiver
                 response = rdt.rdt_2_1_receive()
-                print(response)
+                #print(response)
 
                 # If the response was corrupt, start the loop over, otherwise enter logic below
                 if response is not None:
                     # Check the type of packet
-                    type = rdt.check_format(response.flag.encode('utf-8'))
+                    type = rdt.check_format(response.flag)
 
                     # False means we have an ACK packet
                     if type is False:
                         # Success is set to true if the packet is a positive acknowledgement
                         # If a NACK the while loop will iterate again from the beginning
-                        success = rdt.check_ack(response.flag.encode('utf-8'))
+                        success = rdt.check_ack(response.flag)
 
             # If we reach this point, the packet was received by the server, and we received a postive ACK
             success = False
@@ -77,7 +78,7 @@ if __name__ == '__main__':
                 # If corrupt send NACK, otherwise check for data packet
                 if rcv_pkt is not None:
                     # Will be true if we have a data packet, and break loop
-                    success = rdt.check_format(rcv_pkt.flag.encode('utf-8'))
+                    success = rdt.check_format(rcv_pkt.flag)
 
                 else:
                     rdt.rdt_2_1_send(msg_S, "neg")

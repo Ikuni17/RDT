@@ -4,13 +4,16 @@ from time import sleep
 import hashlib
 
 global pos_ack  # The format for a packet's introductory byte that denotes it as a positive acknowledgement.
-pos_ack = (1).to_bytes(2, byteorder='big')
+#pos_ack = (1).to_bytes(2, byteorder='big')
+pos_ack = 1
 
 global neg_ack  # The format for a packet's introductory byte that denotes it as a negative acknowledgement.
-neg_ack = (0).to_bytes(2, byteorder='big')
+#neg_ack = (0).to_bytes(2, byteorder='big')
+neg_ack = 0
 
 global data  # The format for a packet's introductory byte that denotes it as a data packet.
-data = (128).to_bytes(1, byteorder='big')
+#data = (128).to_bytes(2, byteorder='big')
+data = 128
 
 
 class Packet:
@@ -62,7 +65,7 @@ class Packet:
 
 
 class AckPack(Packet):
-    flag_length = 7
+    flag_length = 3
 
     def __init__(self, seq_num, msg_S, flag):
         Packet.__init__(self, seq_num, msg_S)
@@ -82,8 +85,14 @@ class AckPack(Packet):
                 AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length + AckPack.checksum_length:]
         flag = byte_S[
                AckPack.length_S_length + AckPack.seq_num_S_length: AckPack.length_S_length + AckPack.seq_num_S_length + AckPack.flag_length]
-        # print("from flag")
-        # print(flag)
+        #print(flag)
+        #print(type(flag))
+        #print(flag.encode('utf-8'))
+        flag = (int(flag)).to_bytes(2, byteorder='big')
+        #print(flag)
+        #print(type(flag))
+        #flag.lstrip('b')
+        #print(flag)
         return self(seq_num, msg_S, flag)
 
     def get_byte_S(self):
@@ -195,6 +204,8 @@ class RDT:
                 #rdt.rdt_2_1_send(" ", "pos")
                 p = AckPack.from_byte_S(self.byte_buffer[0:length])
                 self.byte_buffer = self.byte_buffer[length:]
+                #print(p.flag)
+                #print(type(p.flag))
                 return p
             else:
                 return None
@@ -227,7 +238,8 @@ class RDT:
 
     def check_format(self, flag):
         # Return true if 7th index is 1, which is flag for data packet. Otherwise false which is ACK packet
-        #flag.encode('utf-8')
+        #print(type(flag))
+        #print(flag)
         return (int.from_bytes(flag, byteorder='big') & (1 << 7)) != 0
 
     def check_ack(self, flag):
