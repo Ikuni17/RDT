@@ -184,21 +184,21 @@ class RDT:
         self.network.udt_send(p.get_byte_S())
 
     def rdt_2_1_receive(self):
-        ret_S = None
+        #ret_S = None
         byte_S = self.network.udt_receive()
         self.byte_buffer += byte_S
 
-        length = int(self.byte_buffer[:AckPack.length_S_length])
-        if not AckPack.corrupt(self.byte_buffer[0:length]):
-            rdt.rdt_2_1_send("", "pos")
-            p = AckPack.from_byte_S(self.byte_buffer[0:length])
-            ret_S = p.msg_S if (ret_S is None) else ret_S + p.msg_S
-            self.byte_buffer = self.byte_buffer[length:]
-            return ret_S
-        else:
-            rdt.rdt_2_1_send("", "neg")
-        '''# keep extracting packets - if reordered, could get more than one
-        while True:
+        if (len(self.byte_buffer) > AckPack.length_S_length):
+            length = int(self.byte_buffer[:AckPack.length_S_length])
+            if not AckPack.corrupt(self.byte_buffer[0:length]):
+                #rdt.rdt_2_1_send(" ", "pos")
+                p = AckPack.from_byte_S(self.byte_buffer[0:length])
+                self.byte_buffer = self.byte_buffer[length:]
+                return p
+            else:
+                return None
+        # keep extracting packets - if reordered, could get more than one
+        '''while True:
             # check if we have received enough bytes
             if (len(self.byte_buffer) < AckPack.length_S_length):
                 return ret_S  # not enough bytes to read packet length
@@ -226,10 +226,12 @@ class RDT:
 
     def check_format(self, flag):
         # Return true if 7th index is 1, which is flag for data packet. Otherwise false which is ACK packet
+        #flag.encode('utf-8')
         return (int.from_bytes(flag, byteorder='big') & (1 << 7)) != 0
 
     def check_ack(self, flag):
         # Return true if 0th index is 1, which is flag for positive ACK. Otherwise false which is negative ACK
+        #flag.encode('utf-8')
         return (int.from_bytes(flag, byteorder='big') & (1 << 0)) != 0
 
 
