@@ -42,37 +42,41 @@ if __name__ == '__main__':
 
 
     elif rdt_version is 2:
+        # data field for ACK packets, probably not needed
+        filler_msg = 'stuff'
         # Loop through all the messages, sending each in their own packet
         for msg_S in msg_L:
             print('Converting: ' + msg_S)
             success = False
-            #data_get = False
 
             # Loop until a positive ack is received for this packet
-            # TODO Infinite Loop
+            # print("Sending data packet")
             while success is False:
                 # Make the packet and attempt to send it
                 rdt.rdt_2_1_send(msg_S, "data")
-                time.sleep(2)
+
                 # Wait to receive a response from the receiver
                 response = rdt.rdt_2_1_receive()
-                #print(response)
 
                 # If the response was corrupt, start the loop over, otherwise enter logic below
                 if response is not None:
                     # Check the type of packet
                     type = rdt.check_format(response.flag)
+                    # print("Checking packet type")
 
                     # False means we have an ACK packet
                     if type is False:
                         # Success is set to true if the packet is a positive acknowledgement
                         # If a NACK the while loop will iterate again from the beginning
                         success = rdt.check_ack(response.flag)
+                        # print("Checking packet ACK")
 
+            # print("Data packet sent successfully and received ACK")
             # If we reach this point, the packet was received by the server, and we received a postive ACK
             success = False
             # Loop until we receive a valid data packet with the response message
             while success is False:
+                # print("Waiting for response message")
                 rcv_pkt = rdt.rdt_2_1_receive()
 
                 # If corrupt send NACK, otherwise check for data packet
@@ -81,7 +85,8 @@ if __name__ == '__main__':
                     success = rdt.check_format(rcv_pkt.flag)
 
                 else:
-                    rdt.rdt_2_1_send(msg_S, "neg")
+                    # print("Corrupt response packet sending negative ACK")
+                    rdt.rdt_2_1_send(filler_msg, "neg")
 
             # Once we have the valid packet, extract the message and print it
             print("to: " + rcv_pkt.msg_S + "\n")
@@ -89,12 +94,9 @@ if __name__ == '__main__':
             rdt.rdt_2_1_send(msg_S, "pos")
 
     elif rdt_version is 3:
-         for msg_S in msg_L:
-            print('Converting: '+msg_S)
+        for msg_S in msg_L:
+            print('Converting: ' + msg_S)
             success = False
             data_get = False
-
-            #TODO Implement RDT3.0 protocol
-
 
     rdt.disconnect()
